@@ -1,0 +1,26 @@
+version: "3.9"
+
+volumes:
+  calendar_postgres_volume:
+
+services:
+
+  postgres:
+    image: postgres:12-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=calendar
+    volumes:
+      - calendar_postgres_volume:/var/lib/postgresql/data
+
+  calendar:
+    image: calendar:latest
+    ports:
+      - "8000:8080"
+    environment:
+      - JDBC_URL=jdbc:postgresql://postgres:5432/calendar
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+    depends_on:
+      - "postgres"

@@ -1,7 +1,14 @@
-fun main(args: Array<String>) {
-    println("Hello World!")
+import io.ktor.application.*
+import io.ktor.server.engine.*
+import org.jetbrains.exposed.sql.Database
 
-    // Try adding program arguments via Run/Debug configuration.
-    // Learn more about running applications: https://www.jetbrains.com/help/idea/running-applications.html.
-    println("Program arguments: ${args.joinToString()}")
+fun main(args: Array<String>) {
+
+    Database.connect(hikari(commandLineEnvironment(args)))
+
+    io.ktor.server.netty.EngineMain.main(args)
+}
+
+fun Application.module() {
+    configureRouting()
 }
