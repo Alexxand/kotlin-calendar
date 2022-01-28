@@ -1,5 +1,6 @@
 val ktorVersion: String by project
 val exposedVersion: String by project
+val flywayVersion:String by project
 val hikariVersion: String by project
 val postgresqlDriverVersion: String by project
 val kotlinLoggingVersion: String by project
@@ -10,14 +11,16 @@ plugins {
     kotlin("jvm") version "1.6.10"
     application
     id("com.palantir.docker") version "0.32.0"
+    id("com.avast.gradle.docker-compose") version "0.15.0"
 }
 
-//This is necessary to make the version accessible in other places
-val kotlinVersion: String? by extra {
+fun getPluginVersion(pluginName: String): String =
     buildscript.configurations["classpath"]
         .resolvedConfiguration.firstLevelModuleDependencies
-        .find { it.moduleName == "kotlin-gradle-plugin" }?.moduleVersion
-}
+        .find { it.moduleName == pluginName }!!.moduleVersion
+
+//This is necessary as you cannot use external variables inside the plugins {} block
+val kotlinVersion: String = getPluginVersion("org.jetbrains.kotlin.jvm.gradle.plugin")
 
 group = "com.github.Alexxand"
 version = "1.0"
@@ -36,6 +39,8 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
+    implementation("org.flywaydb:flyway-core:$flywayVersion")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
     implementation("org.postgresql:postgresql:$postgresqlDriverVersion")
     implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")

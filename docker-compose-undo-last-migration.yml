@@ -1,0 +1,28 @@
+version: "3.9"
+
+volumes:
+  calendar_postgres_volume:
+
+services:
+
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=calendar
+    volumes:
+      - calendar_postgres_volume:/var/lib/postgresql/data
+
+  undo_migration:
+    image: flyway/flyway:8.4.2-alpine
+    volumes:
+      - ./src/main/resources/db/rollback:/flyway/sql
+    environment:
+      - FLYWAY_URL=jdbc:postgresql://postgres:5432/calendar
+      - FLYWAY_USER=postgres
+      - FLYWAY_PASSWORD=postgres
+    depends_on:
+      - "postgres"
+    command:
+      undo
