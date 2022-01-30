@@ -1,7 +1,11 @@
+import db.DefaultMeetingDao
 import io.ktor.application.*
+import io.ktor.features.*
+import io.ktor.serialization.*
 import io.ktor.server.engine.*
 import org.jetbrains.exposed.sql.Database
 import org.flywaydb.core.Flyway
+import service.DefaultIntervalService
 
 fun main(args: Array<String>) {
 
@@ -17,5 +21,10 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    configureRouting()
+    install(ContentNegotiation) {
+        json()
+    }
+    val meetingDao = DefaultMeetingDao()
+    val periodsServiceDao = DefaultIntervalService()
+    configureRouting(meetingDao, periodsServiceDao)
 }

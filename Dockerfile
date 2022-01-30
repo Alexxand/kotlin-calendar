@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk
+FROM openjdk:11-jdk
 RUN mkdir /app
 COPY calendar-1.0.tar /app/
 RUN cd /app && tar xvf calendar-1.0.tar
