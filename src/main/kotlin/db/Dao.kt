@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.transactions.transaction
+import util.instantOf
 import java.time.Instant
 import java.util.*
 
@@ -62,7 +63,7 @@ class DefaultMeetingDao: MeetingDao {
         transaction {
             Meetings
                 .leftJoin(MeetingInvitations, { id }, { meetingId })
-                .slice(Meetings.startTime, Meetings.endTime)
+                .slice(Meetings.startTime, Meetings.endTime, Meetings.timeZoneOffsetId)
                 .select(
                     (Meetings.meetingOrganizerId eq userId) or
                             ((MeetingInvitations.invitedUserId eq userId)
@@ -71,7 +72,10 @@ class DefaultMeetingDao: MeetingDao {
                 .orderBy(Meetings.startTime to SortOrder.ASC)
                 .withDistinct(true)
                 .map {
-                    Pair(it[Meetings.startTime], it[Meetings.endTime])
+                    val startTime = it[Meetings.startTime]
+                    val endTime = it[Meetings.endTime]
+                    val timeZoneOffset = it[Meetings.timeZoneOffsetId]
+                    Pair(instantOf(startTime, timeZoneOffset), instantOf(endTime, timeZoneOffset))
                 }
         }
 
@@ -79,7 +83,7 @@ class DefaultMeetingDao: MeetingDao {
         transaction {
             Meetings
                 .leftJoin(MeetingInvitations, { id }, { meetingId })
-                .slice(Meetings.startTime, Meetings.endTime)
+                .slice(Meetings.startTime, Meetings.endTime, Meetings.timeZoneOffsetId)
                 .select(
                     (Meetings.meetingOrganizerId inList userIds) or
                             ((MeetingInvitations.invitedUserId inList userIds)
@@ -88,7 +92,10 @@ class DefaultMeetingDao: MeetingDao {
                 .orderBy(Meetings.startTime to SortOrder.ASC)
                 .withDistinct(true)
                 .map {
-                    Pair(it[Meetings.startTime], it[Meetings.endTime])
+                    val startTime = it[Meetings.startTime]
+                    val endTime = it[Meetings.endTime]
+                    val timeZoneOffset = it[Meetings.timeZoneOffsetId]
+                    Pair(instantOf(startTime, timeZoneOffset), instantOf(endTime, timeZoneOffset))
                 }
         }
 
@@ -101,7 +108,8 @@ class DefaultMeetingDao: MeetingDao {
                         it[Meetings.id],
                         it[Meetings.meetingOrganizerId],
                         it[Meetings.startTime],
-                        it[Meetings.endTime]
+                        it[Meetings.endTime],
+                        it[Meetings.timeZoneOffsetId]
                     )
                 }
                 .map {
@@ -116,7 +124,8 @@ class DefaultMeetingDao: MeetingDao {
                                     row[MeetingInvitations.accepted]
                                 ) },
                         it.key.startTime,
-                        it.key.endTime
+                        it.key.endTime,
+                        it.key.timeZoneOffset
                     )
                 }
         }
@@ -131,7 +140,8 @@ class DefaultMeetingDao: MeetingDao {
                         it[Meetings.id],
                         it[Meetings.meetingOrganizerId],
                         it[Meetings.startTime],
-                        it[Meetings.endTime]
+                        it[Meetings.endTime],
+                        it[Meetings.timeZoneOffsetId]
                     )
                 }
                 .map {
@@ -146,7 +156,8 @@ class DefaultMeetingDao: MeetingDao {
                                 row[MeetingInvitations.accepted]
                             ) },
                     it.key.startTime,
-                    it.key.endTime
+                    it.key.endTime,
+                    it.key.timeZoneOffset
                 )
             }.singleOrNull()
         }
@@ -169,7 +180,8 @@ class DefaultMeetingDao: MeetingDao {
                         it[Meetings.id],
                         it[Meetings.meetingOrganizerId],
                         it[Meetings.startTime],
-                        it[Meetings.endTime]
+                        it[Meetings.endTime],
+                        it[Meetings.timeZoneOffsetId]
                     )
                 }
                 .filter {
@@ -192,7 +204,8 @@ class DefaultMeetingDao: MeetingDao {
                                 )
                             },
                         it.key.startTime,
-                        it.key.endTime
+                        it.key.endTime,
+                        it.key.timeZoneOffset
                     )
                 }
 

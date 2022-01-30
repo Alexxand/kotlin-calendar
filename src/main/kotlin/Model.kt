@@ -1,10 +1,10 @@
 import java.util.*
 import kotlinx.serialization.Serializable
-import util.DurationSerializer
-import util.InstantSerializer
-import util.UUIDSerializer
+import util.*
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 @Serializable
 data class User(
@@ -28,10 +28,15 @@ data class Meeting(
     @Serializable(with = UUIDSerializer::class)
     val meetingOrganizerId: UUID,
     val invitations: List<MeetingInvitation>,
-    @Serializable(with = InstantSerializer::class)
-    val startTime: Instant,
-    @Serializable(with = InstantSerializer::class)
-    val endTime: Instant
+    @Serializable(with = LocalDateTimeSerializer::class)
+    val startTime: LocalDateTime,
+    @Serializable(with = LocalDateTimeSerializer::class)
+    val endTime: LocalDateTime,
+    //Зона не может отличаться у начала и конца встречи,
+    //поэтому вместо OffsetDateTime использую ZoneOffset
+    //отдельно от временных полей
+    @Serializable(with = ZoneOffsetSerializer::class)
+    val timeZoneOffset: ZoneOffset
 )
 
 // Нужно, чтобы можно было использовать List<UserId> вместо List<UUID>, т. к. последний вариант
@@ -61,9 +66,12 @@ data class Interval(
 data class MeetingInfo(
     val id: UUID? = null,
     val meetingOrganizerId: UUID,
-    val startTime: Instant,
-    val endTime: Instant
-)
+    val startTime: LocalDateTime,
+    val endTime: LocalDateTime,
+    val timeZoneOffsetId: String
+) {
+    val timeZoneOffset = ZoneOffset.of(timeZoneOffsetId)
+}
 
 enum class InvitationAction {
     ACCEPT, REJECT

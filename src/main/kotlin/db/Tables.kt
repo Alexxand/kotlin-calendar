@@ -1,5 +1,5 @@
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.javatime.timestamp
+import org.jetbrains.exposed.sql.javatime.datetime
 
 object Users: Table("users") {
     val id = uuid("id").autoGenerate()
@@ -12,8 +12,9 @@ object Users: Table("users") {
 object Meetings: Table("meetings") {
     val id = uuid("id").autoGenerate()
     val meetingOrganizerId = uuid("meeting_organizer_id") references Users.id
-    val startTime = timestamp("start_time").index("meeting_start_idx")
-    val endTime = timestamp("end_time")
+    val startTime = datetime("start_time").index("meeting_start_idx")
+    val endTime = datetime("end_time")
+    val timeZoneOffsetId = varchar("timezone_offset", 10)
 
     override val primaryKey = PrimaryKey(id)
 }
