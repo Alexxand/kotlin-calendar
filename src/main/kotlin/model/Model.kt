@@ -1,3 +1,5 @@
+package model
+
 import java.util.*
 import kotlinx.serialization.Serializable
 import util.*

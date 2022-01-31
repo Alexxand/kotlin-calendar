@@ -1,5 +1,6 @@
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.datetime
+import model.RepetitionType
 
 object Users: Table("users") {
     val id = uuid("id").autoGenerate()

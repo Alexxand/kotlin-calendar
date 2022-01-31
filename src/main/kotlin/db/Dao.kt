@@ -1,14 +1,16 @@
 package db
 
-import Meeting
-import MeetingInfo
-import MeetingInvitation
+import model.Meeting
+import model.MeetingInfo
+import model.MeetingInvitation
 import MeetingInvitations
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.asLiteral
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
+import org.jetbrains.exposed.sql.javatime.hour
 import org.jetbrains.exposed.sql.transactions.transaction
 import util.instantOf
 import java.time.Instant
@@ -151,7 +153,7 @@ class DefaultMeetingDao: MeetingDao {
             Meetings
                 .leftJoin(MeetingInvitations, { id }, { meetingId })
                 .select(
-                    (startTime?.let { Meetings.startTime greaterEq it } ?: Op.TRUE)
+                    (startTime?.let { instantOf(Meetings.startTime., Meetings.timeZoneOffsetId) greaterEq it } ?: Op.TRUE)
                             and (endTime?.let { Meetings.endTime lessEq it } ?: Op.TRUE)
                 )
                 .groupBy {
@@ -165,11 +167,15 @@ class DefaultMeetingDao: MeetingDao {
                     )
                 }
                 .filter {
-                    it.key.meetingOrganizerId == userId ||
-                            (it.value.find { row ->
+                    val meetingStartTimeInstant = instantOf(it.key.startTime, it.key.timeZoneOffset)
+                    val meetingEndTimeInstant = instantOf(it.key.endTime, it.key.timeZoneOffset)
+                    (startTime?.let { requestedStartTime -> meetingStartTimeInstant >= requestedStartTime } ?: true)
+                            && (endTime?.let { requestedEndTime -> meetingEndTimeInstant <= requestedEndTime } ?: true)
+                            &&
+                            && (it.key.meetingOrganizerId == userId || (it.value.find { row ->
                                 row[MeetingInvitations.invitedUserId] == userId &&
                                         (row[MeetingInvitations.accepted] || includeNotAccepted)
-                            }?.let{true} ?: false)
+                            }?.let { true } ?: false))
                 }
                 .map {
                     Meeting(

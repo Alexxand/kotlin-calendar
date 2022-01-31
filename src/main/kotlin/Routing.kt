@@ -4,10 +4,10 @@ import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import model.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import service.IntervalService
-import util.instantOf
 import java.lang.IllegalArgumentException
 import java.time.Instant
 import java.util.*
