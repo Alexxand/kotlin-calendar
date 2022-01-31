@@ -48,13 +48,8 @@ fun Application.configureRouting(meetingDao: MeetingDao, intervalService: Interv
 
         post("/meetings") {
             val meeting = call.receive<Meeting>()
-            val busyIntervals = meetingDao.getSortedBusyIntervals(meeting.meetingOrganizerId)
             if (meeting.startTime >= meeting.endTime)
                 return@post call.respondText("startTime should be less than endTime", status = HttpStatusCode.BadRequest)
-            val startTimeInstant = instantOf(meeting.startTime, meeting.timeZoneOffset)
-            val endTimeInstant = instantOf(meeting.endTime, meeting.timeZoneOffset)
-            if (intervalService.intersects(Pair(startTimeInstant, endTimeInstant), busyIntervals))
-                return@post call.respondText("Given meeting time period intersect with some already planned meeting period", status = HttpStatusCode.BadRequest)
             val id = transaction {
                 val id = Meetings.insert {
                     it[meetingOrganizerId] = meeting.meetingOrganizerId
@@ -151,15 +146,6 @@ fun Application.configureRouting(meetingDao: MeetingDao, intervalService: Interv
             val invitationAction = call.request.queryParameters["invitationAction"]?.let {
                 try { InvitationAction.valueOf(it) } catch (e: IllegalArgumentException) { null }
             } ?: return@post call.respondText("invitationAction is not given or not equal to ACCEPT or REJECT", status = HttpStatusCode.BadRequest)
-
-            if (invitationAction == InvitationAction.ACCEPT) {
-                val meeting = meetingDao.getMeeting(meetingId) ?: return@post call.respondText("Meeting with such id is not found", status = HttpStatusCode.NotFound)
-                val busyPeriods = meetingDao.getSortedBusyIntervals(userId)
-                val startTimeInstant = instantOf(meeting.startTime, meeting.timeZoneOffset)
-                val endTimeInstant = instantOf(meeting.endTime, meeting.timeZoneOffset)
-                if (intervalService.intersects(Pair(startTimeInstant, endTimeInstant), busyPeriods))
-                    return@post call.respondText("This meeting time period intersect with some already planned meeting period", status = HttpStatusCode.BadRequest)
-            }
 
             when (invitationAction) {
                 InvitationAction.ACCEPT -> meetingDao.acceptInvitation(userId, meetingId)

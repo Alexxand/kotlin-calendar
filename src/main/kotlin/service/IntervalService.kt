@@ -4,13 +4,6 @@ import java.time.Duration
 import java.time.Instant
 
 interface IntervalService {
-    /**
-     * Проверяет, пересекается ли временной интервал из первого аргумента с одним из интервалов из списка во втором аргументе
-     * Предполагается, что интервалы во втором аргументе отсортированы по startTime в порядке возрастания и не пересекаются друг с другом
-     * Также предполагается, что для каждого интервала его конец больше его начала
-     * Если интервал начинается в той же точке, в которой заканчивается другой интервал, считается, что они не пересекаются
-     */
-    fun intersects(interval: Pair<Instant, Instant>, intervals: List<Pair<Instant, Instant>>): Boolean
 
     /**
      * Ищет ближайший к now интервал, длина которого больше, чем minDuration, и который не пересекается ни с одним из заданных интервалов
@@ -23,19 +16,6 @@ interface IntervalService {
 }
 
 class DefaultIntervalService: IntervalService {
-    override fun intersects(interval: Pair<Instant, Instant>, intervals: List<Pair<Instant, Instant>>): Boolean {
-        if (intervals.isEmpty())
-            return false
-
-        intervals.forEach{ println(it) }
-
-        for (i in intervals.indices) {
-            if (interval.first < intervals[i].first) {
-                return interval.second > intervals[i].first
-            }
-        }
-        return interval.first < intervals[intervals.size - 1].second
-    }
 
     override fun findNearestInterval(now: Instant, intervals: List<Pair<Instant, Instant>>, minDuration: Duration): Pair<Instant, Instant> {
         val intervalsFromNow = intervals.filter{ it.first >= now }

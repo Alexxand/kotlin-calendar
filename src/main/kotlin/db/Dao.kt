@@ -15,12 +15,6 @@ import java.time.Instant
 import java.util.*
 
 interface MeetingDao {
-    /**
-     * Возвращает список интервалов для всех встреч, которые пользователь создал,
-     * либо на которые он был приглашён, при этом приняв приглашение
-     * Возвращаемый список отсортирован по startTime
-     */
-    fun getSortedBusyIntervals(userId: UUID): List<Pair<Instant, Instant>>
 
     /**
      * Возвращает список интервалов для всех встреч, которые заданные пользователи создали,
@@ -59,25 +53,6 @@ interface MeetingDao {
 }
 
 class DefaultMeetingDao: MeetingDao {
-    override fun getSortedBusyIntervals(userId: UUID): List<Pair<Instant, Instant>> =
-        transaction {
-            Meetings
-                .leftJoin(MeetingInvitations, { id }, { meetingId })
-                .slice(Meetings.startTime, Meetings.endTime, Meetings.timeZoneOffsetId)
-                .select(
-                    (Meetings.meetingOrganizerId eq userId) or
-                            ((MeetingInvitations.invitedUserId eq userId)
-                                    and (MeetingInvitations.accepted eq true))
-                )
-                .orderBy(Meetings.startTime to SortOrder.ASC)
-                .withDistinct(true)
-                .map {
-                    val startTime = it[Meetings.startTime]
-                    val endTime = it[Meetings.endTime]
-                    val timeZoneOffset = it[Meetings.timeZoneOffsetId]
-                    Pair(instantOf(startTime, timeZoneOffset), instantOf(endTime, timeZoneOffset))
-                }
-        }
 
     override fun getSortedBusyIntervals(userIds: List<UUID>): List<Pair<Instant, Instant>> =
         transaction {
