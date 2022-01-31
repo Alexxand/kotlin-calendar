@@ -1,6 +1,6 @@
 package db
 
-import Meeting
+import ResponseMeeting
 import MeetingInfo
 import MeetingInvitation
 import MeetingInvitations
@@ -31,12 +31,12 @@ interface MeetingDao {
     /**
      * Возвращает все встречи для всех пользователей
      */
-    fun getAllMeetings(): List<Meeting>
+    fun getAllMeetings(): List<ResponseMeeting>
 
     /**
      * Возвращает встречу по её id или null, если встречи с таким id не существует
      */
-    fun getMeeting(meetingId: UUID): Meeting?
+    fun getMeeting(meetingId: UUID): ResponseMeeting?
 
     /**
      * Возвращает все встречи, которые пользователь создал, или на которые был приглашён, которые должны состоятся в указанном временном интервале
@@ -44,7 +44,7 @@ interface MeetingDao {
      * Если startTime==null, считается, что заданный временной интервал начинается с -inf
      * Если endTime==null, считается, что заданный временной интервал оканчивается на +inf
      */
-    fun getMeetings(userId: UUID, startTime: Instant? = null, endTime: Instant? = null, includeNotAccepted: Boolean = false): List<Meeting>
+    fun getMeetings(userId: UUID, startTime: Instant? = null, endTime: Instant? = null, includeNotAccepted: Boolean = false): List<ResponseMeeting>
 
     /**
      * Принять приглашение пользователя на встречу
@@ -92,7 +92,7 @@ class DefaultMeetingDao: MeetingDao {
                 }
         }
 
-    override fun getAllMeetings(): List<Meeting> =
+    override fun getAllMeetings(): List<ResponseMeeting> =
         transaction {
             Meetings.leftJoin(MeetingInvitations, { id }, { meetingId })
                 .selectAll()
@@ -105,7 +105,7 @@ class DefaultMeetingDao: MeetingDao {
                     )
                 }
                 .map {
-                    Meeting(
+                    ResponseMeeting(
                         it.key.id,
                         it.key.meetingOrganizerId,
                         it.value
@@ -121,7 +121,7 @@ class DefaultMeetingDao: MeetingDao {
                 }
         }
 
-    override fun getMeeting(meetingId: UUID): Meeting? =
+    override fun getMeeting(meetingId: UUID): ResponseMeeting? =
         transaction {
             Meetings
                 .leftJoin(MeetingInvitations, { id }, { MeetingInvitations.meetingId })
@@ -135,7 +135,7 @@ class DefaultMeetingDao: MeetingDao {
                     )
                 }
                 .map {
-                Meeting(
+                ResponseMeeting(
                     it.key.id,
                     it.key.meetingOrganizerId,
                     it.value
@@ -156,7 +156,7 @@ class DefaultMeetingDao: MeetingDao {
         startTime: Instant?,
         endTime: Instant?,
         includeNotAccepted: Boolean
-    ): List<Meeting> {
+    ): List<ResponseMeeting> {
         val meetings = transaction {
             Meetings
                 .leftJoin(MeetingInvitations, { id }, { meetingId })
@@ -180,7 +180,7 @@ class DefaultMeetingDao: MeetingDao {
                             }?.let{true} ?: false)
                 }
                 .map {
-                    Meeting(
+                    ResponseMeeting(
                         it.key.id,
                         it.key.meetingOrganizerId,
                         it.value

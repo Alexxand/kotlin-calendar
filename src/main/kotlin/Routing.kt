@@ -46,7 +46,7 @@ fun Application.configureRouting(meetingDao: MeetingDao, intervalService: Interv
         }
 
         post("/meetings") {
-            val meeting = call.receive<Meeting>()
+            val meeting = call.receive<RequestMeeting>()
             val busyPeriods = meetingDao.getSortedBusyIntervals(meeting.meetingOrganizerId)
             if (meeting.startTime >= meeting.endTime)
                 return@post call.respondText("startTime should be less than endTime", status = HttpStatusCode.BadRequest)
@@ -58,24 +58,16 @@ fun Application.configureRouting(meetingDao: MeetingDao, intervalService: Interv
                     it[startTime] = meeting.startTime
                     it[endTime] = meeting.endTime
                 } get Meetings.id
-                for (invitation in meeting.invitations.distinctBy { it.invitedUserId }) {
+                for (invitation in meeting.invitations.distinctBy { it.id }) {
                     MeetingInvitations.insert {
                         it[meetingId] = id
-                        it[invitedUserId] = invitation.invitedUserId
-                        it[accepted] = invitation.accepted
+                        it[invitedUserId] = invitation.id
+                        it[accepted] = false
                     }
                 }
                 id
             }
-            call.respond(
-                Meeting(
-                    id,
-                    meeting.meetingOrganizerId,
-                    meeting.invitations,
-                    meeting.startTime,
-                    meeting.endTime
-                )
-            )
+            call.respond(UserId(id))
         }
 
         put("/meetings/{meetingId}/updateInvitations") {
@@ -83,15 +75,15 @@ fun Application.configureRouting(meetingDao: MeetingDao, intervalService: Interv
                 try { UUID.fromString(it) } catch (e: IllegalArgumentException) { null }
             } ?: return@put call.respondText("User id is not given or has wrong format", status = HttpStatusCode.BadRequest)
 
-            val meetingInvitations = call.receive<List<MeetingInvitation>>()
+            val meetingInvitations = call.receive<List<UserId>>()
 
             transaction {
                 MeetingInvitations.deleteWhere { MeetingInvitations.meetingId eq meetingId }
-                meetingInvitations.distinctBy{ it.invitedUserId }.forEach { invitation ->
+                meetingInvitations.distinctBy{ it.id }.forEach { invitation ->
                     MeetingInvitations.insert {
                         it[MeetingInvitations.meetingId] = meetingId
-                        it[invitedUserId] = invitation.invitedUserId
-                        it[accepted] = invitation.accepted
+                        it[invitedUserId] = invitation.id
+                        it[accepted] = true
                     }
                 }
             }

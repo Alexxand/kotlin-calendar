@@ -22,7 +22,20 @@ data class MeetingInvitation(
     )
 
 @Serializable
-data class Meeting(
+data class RequestMeeting(
+    @Serializable(with = UUIDSerializer::class)
+    val id: UUID? = null,
+    @Serializable(with = UUIDSerializer::class)
+    val meetingOrganizerId: UUID,
+    val invitations: List<UserId>,
+    @Serializable(with = InstantSerializer::class)
+    val startTime: Instant,
+    @Serializable(with = InstantSerializer::class)
+    val endTime: Instant
+)
+
+@Serializable
+data class ResponseMeeting(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID? = null,
     @Serializable(with = UUIDSerializer::class)
