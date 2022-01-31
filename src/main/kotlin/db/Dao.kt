@@ -109,7 +109,8 @@ class DefaultMeetingDao: MeetingDao {
                         it[Meetings.meetingOrganizerId],
                         it[Meetings.startTime],
                         it[Meetings.endTime],
-                        it[Meetings.timeZoneOffsetId]
+                        it[Meetings.timeZoneOffsetId],
+                        it[Meetings.repetitionType]
                     )
                 }
                 .map {
@@ -125,7 +126,8 @@ class DefaultMeetingDao: MeetingDao {
                                 ) },
                         it.key.startTime,
                         it.key.endTime,
-                        it.key.timeZoneOffset
+                        it.key.timeZoneOffset,
+                        it.key.repetitionType
                     )
                 }
         }
@@ -141,7 +143,8 @@ class DefaultMeetingDao: MeetingDao {
                         it[Meetings.meetingOrganizerId],
                         it[Meetings.startTime],
                         it[Meetings.endTime],
-                        it[Meetings.timeZoneOffsetId]
+                        it[Meetings.timeZoneOffsetId],
+                        it[Meetings.repetitionType]
                     )
                 }
                 .map {
@@ -157,7 +160,8 @@ class DefaultMeetingDao: MeetingDao {
                             ) },
                     it.key.startTime,
                     it.key.endTime,
-                    it.key.timeZoneOffset
+                    it.key.timeZoneOffset,
+                    it.key.repetitionType
                 )
             }.singleOrNull()
         }
@@ -181,7 +185,8 @@ class DefaultMeetingDao: MeetingDao {
                         it[Meetings.meetingOrganizerId],
                         it[Meetings.startTime],
                         it[Meetings.endTime],
-                        it[Meetings.timeZoneOffsetId]
+                        it[Meetings.timeZoneOffsetId],
+                        it[Meetings.repetitionType]
                     )
                 }
                 .filter {
@@ -205,7 +210,8 @@ class DefaultMeetingDao: MeetingDao {
                             },
                         it.key.startTime,
                         it.key.endTime,
-                        it.key.timeZoneOffset
+                        it.key.timeZoneOffset,
+                        it.key.repetitionType
                     )
                 }
 

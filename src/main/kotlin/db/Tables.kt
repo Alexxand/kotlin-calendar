@@ -15,6 +15,7 @@ object Meetings: Table("meetings") {
     val startTime = datetime("start_time").index("meeting_start_idx")
     val endTime = datetime("end_time")
     val timeZoneOffsetId = varchar("timezone_offset", 10)
+    val repetitionType = enumeration("repetition_type", RepetitionType::class).nullable()
 
     override val primaryKey = PrimaryKey(id)
 }

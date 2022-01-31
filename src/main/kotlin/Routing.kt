@@ -61,6 +61,7 @@ fun Application.configureRouting(meetingDao: MeetingDao, intervalService: Interv
                     it[startTime] = meeting.startTime
                     it[endTime] = meeting.endTime
                     it[timeZoneOffsetId] = meeting.timeZoneOffset.id
+                    it[repetitionType] = meeting.repetitionType
                 } get Meetings.id
                 for (invitation in meeting.invitations.distinctBy { it.invitedUserId }) {
                     MeetingInvitations.insert {
@@ -78,7 +79,8 @@ fun Application.configureRouting(meetingDao: MeetingDao, intervalService: Interv
                     meeting.invitations,
                     meeting.startTime,
                     meeting.endTime,
-                    meeting.timeZoneOffset
+                    meeting.timeZoneOffset,
+                    meeting.repetitionType
                 )
             )
         }

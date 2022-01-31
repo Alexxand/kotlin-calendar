@@ -36,7 +36,8 @@ data class Meeting(
     //поэтому вместо OffsetDateTime использую ZoneOffset
     //отдельно от временных полей
     @Serializable(with = ZoneOffsetSerializer::class)
-    val timeZoneOffset: ZoneOffset
+    val timeZoneOffset: ZoneOffset,
+    val repetitionType: RepetitionType? = null
 )
 
 // Нужно, чтобы можно было использовать List<UserId> вместо List<UUID>, т. к. последний вариант
@@ -68,11 +69,16 @@ data class MeetingInfo(
     val meetingOrganizerId: UUID,
     val startTime: LocalDateTime,
     val endTime: LocalDateTime,
-    val timeZoneOffsetId: String
+    val timeZoneOffsetId: String,
+    val repetitionType: RepetitionType?
 ) {
     val timeZoneOffset = ZoneOffset.of(timeZoneOffsetId)
 }
 
 enum class InvitationAction {
     ACCEPT, REJECT
+}
+
+enum class RepetitionType {
+    EVERY_DAY, EVERY_WEEK, EVERY_MONTH, EVERY_YEAR, EVERY_WEEKDAY
 }
