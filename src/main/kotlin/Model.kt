@@ -27,7 +27,7 @@ data class RequestMeeting(
     val id: UUID? = null,
     @Serializable(with = UUIDSerializer::class)
     val meetingOrganizerId: UUID,
-    val invitations: List<UserId>,
+    val invitations: List<Id>,
     @Serializable(with = InstantSerializer::class)
     val startTime: Instant,
     @Serializable(with = InstantSerializer::class)
@@ -47,10 +47,10 @@ data class ResponseMeeting(
     val endTime: Instant
 )
 
-// Нужно, чтобы можно было использовать List<UserId> вместо List<UUID>, т. к. последний вариант
+// Нужно, чтобы можно было использовать List<Id> вместо List<UUID>, т. к. последний вариант
 // не компилируется, даже если использовать метод ListSerializer() или создать ListUUIDSerializer
 @Serializable
-data class UserId(
+data class Id(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID
 )
@@ -60,7 +60,7 @@ data class UserId(
 data class NearestIntervalRequest(
     @Serializable(with = DurationSerializer::class)
     val minDuration: Duration,
-    val userIds: List<UserId>
+    val userIds: List<Id>
 )
 
 @Serializable

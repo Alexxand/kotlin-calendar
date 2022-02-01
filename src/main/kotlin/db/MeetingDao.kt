@@ -4,6 +4,8 @@ import ResponseMeeting
 import MeetingInfo
 import MeetingInvitation
 import MeetingInvitations
+import RequestMeeting
+import Id
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
@@ -14,6 +16,11 @@ import java.time.Instant
 import java.util.*
 
 interface MeetingDao {
+
+    fun addMeeting(meeting: RequestMeeting): Id
+
+    fun deleteMeeting(meetingId: UUID)
+
     /**
      * Возвращает список интервалов для всех встреч, которые пользователь создал,
      * либо на которые он был приглашён, при этом приняв приглашение
@@ -28,9 +35,6 @@ interface MeetingDao {
      */
     fun getSortedBusyIntervals(userIds: List<UUID>): List<Pair<Instant, Instant>>
 
-    /**
-     * Возвращает все встречи для всех пользователей
-     */
     fun getAllMeetings(): List<ResponseMeeting>
 
     /**
@@ -46,18 +50,36 @@ interface MeetingDao {
      */
     fun getMeetings(userId: UUID, startTime: Instant? = null, endTime: Instant? = null, includeNotAccepted: Boolean = false): List<ResponseMeeting>
 
-    /**
-     * Принять приглашение пользователя на встречу
-     */
     fun acceptInvitation(userId: UUID, meetingId: UUID)
 
-    /**
-     * Отклонить приглашение пользователя на встречу
-     */
     fun rejectInvitation(userId: UUID, meetingId: UUID)
 }
 
 class DefaultMeetingDao: MeetingDao {
+    override fun addMeeting(meeting: RequestMeeting): Id =
+        transaction {
+            val id = Meetings.insert {
+                it[meetingOrganizerId] = meeting.meetingOrganizerId
+                it[startTime] = meeting.startTime
+                it[endTime] = meeting.endTime
+            } get Meetings.id
+            for (invitation in meeting.invitations.distinctBy { it.id }) {
+                MeetingInvitations.insert {
+                    it[meetingId] = id
+                    it[invitedUserId] = invitation.id
+                    it[accepted] = false
+                }
+            }
+            Id(id)
+        }
+
+    override fun deleteMeeting(meetingId: UUID) {
+        transaction {
+            MeetingInvitations.deleteWhere { MeetingInvitations.meetingId eq meetingId}
+            Meetings.deleteWhere { Meetings.id eq meetingId }
+        }
+    }
+
     override fun getSortedBusyIntervals(userId: UUID): List<Pair<Instant, Instant>> =
         transaction {
             Meetings

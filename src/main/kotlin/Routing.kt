@@ -1,4 +1,5 @@
 import db.MeetingDao
+import db.UserDao
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
@@ -11,27 +12,18 @@ import java.lang.IllegalArgumentException
 import java.time.Instant
 import java.util.*
 
-fun Application.configureRouting(meetingDao: MeetingDao, intervalService: IntervalService) {
+fun Application.configureRouting(userDao: UserDao, meetingDao: MeetingDao, intervalService: IntervalService) {
 
     routing {
 
         post("/users") {
             val user = call.receive<User>()
-            val id = transaction {
-                Users.insert {
-                    it[name] = user.name
-                    it[lastname] = user.lastname
-                } get Users.id
-            }
-            call.respond(User(id, user.name, user.lastname))
+            val id = userDao.addUser(user)
+            call.respond(id)
         }
 
         get("/users") {
-            val users = transaction {
-                Users.selectAll().map {
-                    User(it[Users.id], it[Users.name], it[Users.lastname])
-                }
-            }
+            val users = userDao.getAllUsers()
             call.respond(users)
         }
 
@@ -39,9 +31,7 @@ fun Application.configureRouting(meetingDao: MeetingDao, intervalService: Interv
             val id = call.parameters["id"]?.let {
                 try { UUID.fromString(it) } catch (e: IllegalArgumentException) { null }
                 } ?: return@delete call.respondText("Id is not given or has wrong format", status = HttpStatusCode.BadRequest)
-            transaction {
-                Users.deleteWhere { Users.id eq id }
-            }
+            userDao.deleteUser(id)
             call.respondText("", status = HttpStatusCode.OK)
         }
 
@@ -52,42 +42,8 @@ fun Application.configureRouting(meetingDao: MeetingDao, intervalService: Interv
                 return@post call.respondText("startTime should be less than endTime", status = HttpStatusCode.BadRequest)
             if (intervalService.intersects(Pair(meeting.startTime, meeting.endTime), busyPeriods))
                 return@post call.respondText("Given meeting time period intersect with some already planned meeting period", status = HttpStatusCode.BadRequest)
-            val id = transaction {
-                val id = Meetings.insert {
-                    it[meetingOrganizerId] = meeting.meetingOrganizerId
-                    it[startTime] = meeting.startTime
-                    it[endTime] = meeting.endTime
-                } get Meetings.id
-                for (invitation in meeting.invitations.distinctBy { it.id }) {
-                    MeetingInvitations.insert {
-                        it[meetingId] = id
-                        it[invitedUserId] = invitation.id
-                        it[accepted] = false
-                    }
-                }
-                id
-            }
-            call.respond(UserId(id))
-        }
-
-        put("/meetings/{meetingId}/updateInvitations") {
-            val meetingId = call.parameters["meetingId"]?.let {
-                try { UUID.fromString(it) } catch (e: IllegalArgumentException) { null }
-            } ?: return@put call.respondText("User id is not given or has wrong format", status = HttpStatusCode.BadRequest)
-
-            val meetingInvitations = call.receive<List<UserId>>()
-
-            transaction {
-                MeetingInvitations.deleteWhere { MeetingInvitations.meetingId eq meetingId }
-                meetingInvitations.distinctBy{ it.id }.forEach { invitation ->
-                    MeetingInvitations.insert {
-                        it[MeetingInvitations.meetingId] = meetingId
-                        it[invitedUserId] = invitation.id
-                        it[accepted] = true
-                    }
-                }
-            }
-            call.respondText("", status = HttpStatusCode.OK)
+            val id = meetingDao.addMeeting(meeting)
+            call.respond(id)
         }
 
         get("/meetings") {
@@ -156,10 +112,7 @@ fun Application.configureRouting(meetingDao: MeetingDao, intervalService: Interv
             val id = call.parameters["id"]?.let {
                 try { UUID.fromString(it) } catch (e: IllegalArgumentException) { null }
             } ?: return@delete call.respondText("Id is not given or has wrong format", status = HttpStatusCode.BadRequest)
-            transaction {
-                MeetingInvitations.deleteWhere { MeetingInvitations.meetingId eq id}
-                Meetings.deleteWhere { Meetings.id eq id }
-            }
+            meetingDao.deleteMeeting(id)
             call.respondText("", status = HttpStatusCode.OK)
         }
     }

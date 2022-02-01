@@ -1,4 +1,5 @@
 import db.DefaultMeetingDao
+import db.DefaultUserDao
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
@@ -38,7 +39,8 @@ fun Application.module() {
             throw cause
         }
     }
+    val userDao = DefaultUserDao()
     val meetingDao = DefaultMeetingDao()
     val periodsServiceDao = DefaultIntervalService()
-    configureRouting(meetingDao, periodsServiceDao)
+    configureRouting(userDao, meetingDao, periodsServiceDao)
 }
