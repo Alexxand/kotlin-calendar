@@ -46,11 +46,10 @@ dependencies {
     implementation("org.flywaydb:flyway-core:$flywayVersion")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
     implementation("org.postgresql:postgresql:$postgresqlDriverVersion")
-    implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
-    testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
+    testImplementation(kotlin("test"))
     testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:$spekVersion")
     testRuntimeOnly("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 }
@@ -58,4 +57,8 @@ dependencies {
 docker {
     name = project.name
     files(tasks.distTar.get().outputs)
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

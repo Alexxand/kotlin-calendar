@@ -27,8 +27,6 @@ class DefaultIntervalService: IntervalService {
         if (intervals.isEmpty())
             return false
 
-        intervals.forEach{ println(it) }
-
         for (i in intervals.indices) {
             if (interval.first < intervals[i].first) {
                 return interval.second > intervals[i].first
